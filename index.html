@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(90deg, #6a11cb, #2575fc); /* Cool blue to purple gradient */
+            text-align: center;
+            padding: 20px;
+            color: #fff;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            position: relative;
+            display: none;
+        }
+        .question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #2575fc; /* Button color matching background */
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: #6a11cb; /* Hover effect for buttons */
+        }
+        #score, #timer, #money {
+            font-size: 20px;
+            margin: 10px;
+        }
+        .message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+        }
+        #startButton {
+            font-size: 20px;
+            padding: 15px 30px;
+            background: #6a11cb; /* Start button color */
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        #startButton:hover {
+            background: #2575fc; /* Start button hover effect */
+        }
+    </style>
+</head>
+<body>
+    <button id="startButton">Start Quiz</button>
+    <div class="container" id="quizContainer">
+        <h1>Quiz Game</h1>
+        <h2 id="category">Category: Science</h2>
+        <p id="timer">Time left: 10s</p>
+        <p id="score">Score: 0</p>
+        <p id="money">Money: $0</p>
+        <p class="question" id="question"></p>
+        <div id="answers"></div>
+    </div>
+    <div id="message" class="message"></div>
+    <script>
+        document.getElementById("startButton").addEventListener("click", function() {
+            document.getElementById("startButton").style.display = "none";
+            document.getElementById("quizContainer").style.display = "block";
+            resetGame();
+        });
+
+        const categories = {
+            Science: [
+                { q: "What planet is known as the Red Planet?", a: "Mars", options: ["Mars", "Venus", "Jupiter", "Saturn"] },
+                { q: "What gas do plants absorb?", a: "Carbon Dioxide", options: ["Carbon Dioxide", "Oxygen", "Nitrogen", "Helium"] },
+                { q: "How many bones are in the human body?", a: "206", options: ["206", "210", "300", "180"] },
+                { q: "What is the hardest natural substance?", a: "Diamond", options: ["Diamond", "Gold", "Iron", "Platinum"] },
+                { q: "What is the boiling point of water?", a: "100°C", options: ["100°C", "90°C", "110°C", "95°C"] }
+            ],
+            Maths: [
+                { q: "What is 5 + 5?", a: "10", options: ["10", "20", "30", "40"] },
+                { q: "What is 3 * 3?", a: "9", options: ["9", "6", "12", "15"] },
+                { q: "What is 15 - 5?", a: "10", options: ["10", "5", "20", "15"] },
+                { q: "What is 12 / 4?", a: "3", options: ["3", "4", "5", "2"] },
+                { q: "What is 9 * 2?", a: "18", options: ["18", "20", "15", "12"] }
+            ],
+            Geography: [
+                { q: "What is the capital of France?", a: "Paris", options: ["Paris", "London", "Berlin", "Madrid"] },
+                { q: "What is the largest continent?", a: "Asia", options: ["Asia", "Africa", "Europe", "North America"] },
+                { q: "Which ocean is the largest?", a: "Pacific", options: ["Pacific", "Atlantic", "Indian", "Arctic"] },
+                { q: "What is the tallest mountain?", a: "Mount Everest", options: ["Mount Everest", "K2", "Kangchenjunga", "Makalu"] },
+                { q: "Which country is famous for kangaroos?", a: "Australia", options: ["Australia", "New Zealand", "South Africa", "India"] }
+            ]
+        };
+
+        let categoryIndex = 0;
+        let categoryKeys = Object.keys(categories);
+        let currentCategory = categoryKeys[categoryIndex];
+        let questions = categories[currentCategory];
+        let questionIndex = 0;
+        let score = 0;
+        let money = 0;  // Variable to track the money
+        let timeLeft;
+        let timer;
+
+        function startTimer() {
+            timeLeft = 10;
+            document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    showMessage("Time's up! Restarting category...");
+                    setTimeout(switchCategory, 1000);
+                }
+            }, 1000);
+        }
+
+        function resetGame() {
+            score = 0;
+            money = 0; // Reset money
+            categoryIndex = 0;
+            switchCategory();
+        }
+
+        function switchCategory() {
+            if (categoryIndex >= categoryKeys.length) {
+                showMessage(score >= 30 ? "You Win 🎉" : "You Lose 😔");
+                setTimeout(resetGame, 2000);
+                return;
+            }
+            currentCategory = categoryKeys[categoryIndex];
+            questions = categories[currentCategory];
+            questionIndex = 0;
+            document.getElementById("category").textContent = "Category: " + currentCategory;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (questionIndex >= questions.length) {
+                categoryIndex++;
+                switchCategory();
+                return;
+            }
+            document.getElementById("question").textContent = questions[questionIndex].q;
+            let answersDiv = document.getElementById("answers");
+            answersDiv.innerHTML = "";
+            let correctAnswer = questions[questionIndex].a;
+            let shuffledAnswers = questions[questionIndex].options.sort(() => Math.random() - 0.5);
+            shuffledAnswers.forEach(answer => {
+                let btn = document.createElement("button");
+                btn.textContent = answer;
+                btn.classList.add("btn");
+                btn.onclick = () => checkAnswer(answer, correctAnswer);
+                answersDiv.appendChild(btn);
+            });
+            startTimer();
+        }
+
+        function checkAnswer(answer, correctAnswer) {
+            clearInterval(timer);
+            if (answer === correctAnswer) {
+                score += 10;
+                money += 2;  // Add $2 for correct answer
+                showMessage("Correct! +$2");
+                questionIndex++;
+            } else {
+                showMessage("Wrong! Restarting category...");
+                setTimeout(switchCategory, 1000);
+                return;
+            }
+            document.getElementById("score").textContent = `Score: ${score}`;
+            document.getElementById("money").textContent = `Money: $${money}`;
+            setTimeout(loadQuestion, 1000);
+        }
+
+        function showMessage(msg) {
+            let messageDiv = document.getElementById("message");
+            messageDiv.textContent = msg;
+            messageDiv.style.display = "block";
+            setTimeout(() => messageDiv.style.display = "none", 1000);
+        }
+    </script>
+</body>
+</html>
